@@ -80,9 +80,6 @@ task test
 
 # Run with coverage
 task test-coverage
-
-# Test specific components
-task test-realtime
 ```
 
 ## 🔧 **Development**
