@@ -1,0 +1,106 @@
+version: '3'
+
+vars:
+  PROTO_DIR: proto
+  GO_MODULE: github.com/brenocoelho/messaging-app-go
+  MIGRATION_DIR: migrations
+
+tasks:
+  install:
+    desc: Install dependencies
+    cmds:
+      - go mod tidy
+      - go mod download
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+  proto:
+    desc: Generate protobuf files
+    cmds:
+      - echo "Generating protobuf files..."
+      - mkdir -p {{.PROTO_DIR}}
+      - protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative {{.PROTO_DIR}}/messaging.proto
+
+  build:
+    desc: Build the gRPC server
+    cmds:
+      - go build -o bin/grpc-server cmd/grpc-server/main.go
+
+  build-client:
+    desc: Build the realtime client
+    cmds:
+      - go build -o bin/realtime-client cmd/realtime-client/main.go
+
+  build-all:
+    desc: Build both server and client
+    deps: [build, build-client]
+
+  run:
+    desc: Run the gRPC server
+    deps: [build]
+    cmds:
+      - export $(grep -v ^# .env | xargs) && ./bin/grpc-server
+
+  run-dev:
+    desc: Run the gRPC server in development mode
+    cmds:
+      - export $(grep -v ^# .env | xargs) && go run ./cmd/grpc-server
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf bin/
+      - rm -f coverage.out coverage.html
+
+  test:
+    desc: Run all unit tests
+    cmds:
+      - go test -v ./pkg/jwt/...
+      - go test -v ./pkg/redisconn/...
+      - go test -v ./internal/services/...
+
+  test-coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - go test -v -coverprofile=coverage.out ./pkg/jwt/...
+      - go test -v -coverprofile=coverage.out ./pkg/redisconn/...
+      - go test -v -coverprofile=coverage.out ./internal/services/...
+      - go tool cover -html=coverage.out -o coverage.html
+
+  lint:
+    desc: Lint the codebase
+    cmds:
+      - golangci-lint run
+
+  dev:
+    desc: Start development environment (local services + gRPC server)
+    cmds:
+      - task local-up
+      - task run
+
+  local-up:
+    desc: Start local services (PostgreSQL, Redis)
+    cmds:
+      - docker-compose -f docker/local/docker-compose.yml up -d
+
+  local-down:
+    desc: Stop local services
+    cmds:
+      - docker-compose -f docker/local/docker-compose.yml down
+
+  migrate-create:
+    desc: Create a new database migration file like "task migrate-create -- create_users_table"
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} create {{.CLI_ARGS}} sql 
+
+  migrate-up:
+    desc: Apply database migrations
+    cmds:
+      - export $(grep -v ^# .env | xargs) && goose -dir {{.MIGRATION_DIR}} postgres "host=$POSTGRES_WRITE_HOST port=$POSTGRES_WRITE_PORT user=$POSTGRES_WRITE_USER password=$POSTGRES_WRITE_PASSWORD dbname=$POSTGRES_WRITE_DB_NAME sslmode=disable" up
+
+  migrate-down:
+    desc: Rollback the last database migration
+    cmds:
+      - export $(grep -v ^# .env | xargs) && goose -dir {{.MIGRATION_DIR}} postgres "host=$POSTGRES_WRITE_HOST port=$POSTGRES_WRITE_PORT user=$POSTGRES_WRITE_USER password=$POSTGRES_WRITE_PASSWORD dbname=$POSTGRES_WRITE_DB_NAME sslmode=disable" down
+

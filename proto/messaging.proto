@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package messaging;
+
+option go_package = "github.com/brenocoelho/messaging-app-go/proto";
+
+import "google/protobuf/timestamp.proto";
+
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message Message {
+  string id = 1;
+  string chat_id = 2;
+  string user_id = 3;
+  string content = 4;
+  google.protobuf.Timestamp sent_at = 5;
+  string status = 6;
+}
+
+message Chat {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 4;
+  repeated User members = 5;
+  Message last_message = 6;
+}
+
+service MessagesService {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
+  rpc UpdateMessageStatus(UpdateMessageStatusRequest) returns (UpdateMessageStatusResponse);
+  
+  // Real-time messaging endpoints
+  rpc SubscribeToChat(SubscribeToChatRequest) returns (stream ChatMessage);
+}
+
+message SendMessageRequest {
+  string chat_id = 1;
+  string content = 2;
+  string idempotency_key = 3;
+}
+
+message SendMessageResponse {
+  Message message = 1;
+}
+
+message ListMessagesRequest {
+  string chat_id = 1;
+  int32 page = 2; 
+  int32 limit = 3;
+}
+
+message ListMessagesResponse {
+  repeated Message messages = 1;
+  int32 total = 2;
+}
+
+message UpdateMessageStatusRequest{
+  string message_id = 1;
+  string status = 2;
+}
+
+message UpdateMessageStatusResponse{
+  string message_id = 1;
+  string status = 2;
+}
+
+// Real-time messaging messages
+message SubscribeToChatRequest {
+  string chat_id = 1;
+}
+
+message ChatMessage {
+  string message_id = 1;
+  string chat_id = 2;
+  string user_id = 3;
+  string username = 4;
+  string content = 5;
+  google.protobuf.Timestamp sent_at = 6;
+  string status = 7;
+}
+
+
+service ChatsService {
+  rpc CreateChat(CreateChatRequest) returns (CreateChatResponse);
+  rpc GetChat(GetChatRequest) returns (GetChatResponse);
+  rpc ListChats(ListChatsRequest) returns (ListChatsResponse);
+}
+
+message CreateChatRequest {
+  string name = 1;
+  string email = 3;
+}
+
+message CreateChatResponse {
+  string chat_id = 1;
+}
+
+message GetChatRequest {
+  string chat_id = 1;
+}
+
+message GetChatResponse {
+  Chat chat = 1;
+}
+
+message ListChatsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message ListChatsResponse {
+  repeated Chat chats = 1;
+  int32 total = 2;
+}
+
+service UsersService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message CreateUserResponse {
+  User user = 1;
+  string token = 2;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  User user = 1;
+  string token = 2;
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message UserUpdate {
+  string user_id = 1;
+  string update_type = 2; // "profile_update", "status_change", "new_chat"
+  string content = 3;
+  google.protobuf.Timestamp timestamp = 4;
+}
