@@ -27,7 +27,7 @@ This is a real-time messaging platform that enables instant communication betwee
 
 ## 🏗 **Architecture**
 
-![Architecture](docs/models.png)
+![Model](docs/models.png)
 
 ### **Core Components**
 - **gRPC Server**: Handles all client communication
