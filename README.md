@@ -25,7 +25,7 @@ This is a real-time messaging platform that enables instant communication betwee
 5. **Message Persistence** → All messages stored in database
 6. **Idempotency** → Duplicate messages automatically prevented
 
-## 🏗 **Architecture**
+## 🏗 **Model**
 
 ![Model](docs/models.png)
 
