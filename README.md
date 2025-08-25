@@ -116,7 +116,6 @@ task clean
 - **Scalable**: Redis enables horizontal scaling
 - **Secure**: JWT authentication throughout
 - **Efficient**: gRPC for high-performance communication
-- **Reliable**: Idempotency prevents message loss
 - **Modern**: Built with current best practices
 
 ## 📖 **Learn More**
