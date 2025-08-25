@@ -13,7 +13,6 @@ This is a real-time messaging platform that enables instant communication betwee
 - **Redis idempotency** to prevent duplicate messages
 - **gRPC streaming** for efficient real-time communication
 - **PostgreSQL** for persistent message storage
-- **Scalable architecture** ready for production
 
 ## 🔄 **User Flow**
 
